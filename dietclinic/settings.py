@@ -80,16 +80,17 @@ WSGI_APPLICATION = 'dietclinic.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'CRM',  # your database name
+        'NAME': os.environ.get('MONGO_DB', 'CRM'),  # default to CRM if env var missing
         'CLIENT': {
-            'host': 'mongodb+srv://simranjk1468_db_user:3UOXw0Nka93Ti0tF@cluster0.jsirwn7.mongodb.net/CRM',
-            'username': 'simranjk1468_db_user',
-            'password': '3UOXw0Nka93Ti0tF',
+            'host': f"mongodb+srv://{os.environ.get('MONGO_USER')}:{os.environ.get('MONGO_PASSWORD')}@{os.environ.get('MONGO_HOST')}/{os.environ.get('MONGO_DB')}",
+            'username': os.environ.get('MONGO_USER'),
+            'password': os.environ.get('MONGO_PASSWORD'),
             'authSource': 'admin',
-            'authMechanism': 'SCRAM-SHA-1',  # or SCRAM-SHA-256 if supported
+            'authMechanism': 'SCRAM-SHA-1',  # or SCRAM-SHA-256
         },
     }
 }
+
 
 
 # Password validation
