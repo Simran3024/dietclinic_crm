@@ -8,13 +8,8 @@ from django.http import JsonResponse
 import json
 
 # ---------------- MongoDB Connection ----------------
-# client = pymongo.MongoClient("mongodb://localhost:27017/")
-client = MongoClient(
-    f"mongodb+srv://{os.environ.get('MONGO_USER')}:{os.environ.get('MONGO_PASSWORD')}@{os.environ.get('MONGO_HOST')}/{os.environ.get('MONGO_DB')}"
-)
-db = client[os.environ.get('MONGO_DB')]
-users_collection = db["users"]
-# db = client["CRM"]
+client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = client["CRM"]
 users_collection = db["users"]
 leads_collection = db["leads"]
 customers_collection = db["customers"]
