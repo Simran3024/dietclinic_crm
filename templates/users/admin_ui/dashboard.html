@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0A3D91; /* Dark Blue Background */
+    margin: 0;
+    padding: 20px;
+    color: #07286F;
+  }
+
+  h2, h3, span {
+    color: #E8F0FE;
+    margin: 0;
+  }
+
+  /* Header container for dashboard title + welcome/logout */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  nav {
+    background-color: #07286F; /* Darker nav bar */
+    border-radius: 15px;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+  }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 15px;
+    padding: 0;
+    margin: 0;
+  }
+
+  nav ul li a {
+    text-decoration: none;
+    color: #fff;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: background-color 0.3s;
+  }
+
+  nav ul li a:hover {
+    background-color: #E8F0FE; /* Light Blue Hover */
+    color: #07286F; /* Dark Blue Text on Hover */
+  }
+
+  .card {
+    background-color: #E8F0FE; /* Light Blue Card */
+    padding: 15px 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    color: #07286F;
+  }
+
+  .welcome {
+    font-weight: 500;
+  }
+
+  .logout-btn {
+    background-color: #07286F;
+    color: #fff;
+    padding: 5px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-left: 10px;
+    transition: background-color 0.3s;
+  }
+
+  .logout-btn:hover {
+    background-color: #E8F0FE;
+    color: #07286F;
+  }
+
+  ul {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  ul li {
+    margin-bottom: 8px;
+  }
+
+  a {
+    color: #0A3D91;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h2>⚡ Admin Dashboard</h2>
+  <div>
+    <span class="welcome">Welcome, <strong>{{ request.session.username }}</strong> ({{ request.session.role }})</span>
+    <a class="logout-btn" href="{% url 'logout' %}">Logout</a>
+  </div>
+</div>
+
+<!-- Navigation Menu -->
+<nav>
+  <ul>
+    <li><a href="{% url 'leads_management' %}">📥 Leads Management</a></li>
+    <li><a href="{% url 'customers_management' %}">👤 Customer Management</a></li>
+    <li><a href="{% url 'plans_management' %}">📅 Plan & Renewals</a></li>
+    <li><a href="{% url 'whatsapp_management' %}">💬 WhatsApp Messaging</a></li>
+    <li><a href="{% url 'reports_analytics' %}">📊 Reports & Analytics</a></li>
+    <li><a href="{% url 'user_management' %}">⚙️ User Management</a></li>
+  </ul>
+</nav>
+
+<!-- Upcoming Renewals -->
+<h3>Upcoming Renewals</h3>
+<div class="card">
+  <ul>
+    {% for r in renewal_reminders %}
+      <li>
+        {{ r.customer }} → Renewal on {{ r.renewal_date }}
+        ({{ r.days_left }} days left) | Plan: {{ r.plan }}
+      </li>
+    {% empty %}
+      <li>No upcoming renewals.</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<!-- Quick Summary -->
+<h3>📊 Quick Stats</h3>
+<div class="card">
+  <ul>
+    <li>Total Leads: {{ total_leads }}</li>
+    <li>Total Customers: {{ total_customers }}</li>
+    <li>Converted Leads: {{ converted_leads }}</li>
+    <li>Revenue Collected: ₹{{ total_revenue }}</li>
+  </ul>
+</div>
+
+</body>
+</html>

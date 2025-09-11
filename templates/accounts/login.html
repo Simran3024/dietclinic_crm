@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0A3D91;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .login-container {
+    background-color: #E8F0FE;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: flex;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  h2 {
+    margin-bottom: 10px;
+    color: #0A3D91;
+  }
+
+  form p, p {
+    color: #555;
+    font-size: 14px;
+  }
+
+  input,
+  select {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+
+  input:focus,
+  select:focus {
+    outline: none;
+    border-color: #0A3D91;
+  }
+
+  button {
+    background-color: #0A3D91;
+    color: #fff;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #07286F;
+  }
+
+  a {
+    color: #0A3D91;
+    text-decoration: none;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-container">
+  <h2>Login</h2>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+
+    {% comment %} <label for="role">Login as:</label> {% endcomment %}
+    <select name="role" required>
+      <option value="ADMIN">Admin</option>
+      <option value="COUNSELOR">Counselor</option>
+      <option value="NUTRITIONIST">Nutritionist</option>
+    </select>
+
+    <button type="submit">Login</button>
+  </form>
+
+  <p>Don’t have an account? 
+     <a href="{% url 'signup' %}">Signup here</a>
+  </p>
+
+  {% for msg in messages %}
+    <p>{{ msg }}</p>
+  {% endfor %}
+</div>
+
+</body>
+</html>

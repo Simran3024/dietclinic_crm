@@ -1,0 +1,73 @@
+<h2>Leads Management</h2>
+
+<!-- Add New Lead Manually -->
+<form method="post">
+  {% csrf_token %}
+  <input type="text" name="name" placeholder="Lead Name" required><br>
+  <input type="text" name="instagram_username" placeholder="Instagram Username"><br>
+  <input type="text" name="contact" placeholder="Contact"><br>
+  <textarea name="message" placeholder="Message"></textarea><br>
+  <button type="submit">Add Lead</button>
+</form>
+
+<hr>
+
+<!-- Leads Table -->
+<table border="1" cellpadding="5">
+  <tr>
+    <th>Name</th>
+    <th>Instagram</th>
+    <th>Contact</th>
+    <th>Message</th>
+    <th>Status</th>
+    <th>Assigned To</th>
+    <th>Source</th>
+    <th>Created</th>
+    <th>Assign</th>
+    <th>Convert</th>  <!-- 👈 new column -->
+  </tr>
+  {% for lead in leads %}
+  <tr>
+    <td>{{ lead.name }}</td>
+    <td>{{ lead.instagram_username }}</td>
+    <td>{{ lead.contact }}</td>
+    <td>{{ lead.message }}</td>
+    <td>
+      <form method="post" action="{% url 'update_lead_status' lead.id %}">
+        {% csrf_token %}
+        <select name="status" onchange="this.form.submit()">
+          <option value="NEW" {% if lead.status == "NEW" %}selected{% endif %}>New</option>
+          <option value="IN_DISCUSSION" {% if lead.status == "IN_DISCUSSION" %}selected{% endif %}>In Discussion</option>
+          <option value="CONVERTED" {% if lead.status == "CONVERTED" %}selected{% endif %}>Converted</option>
+          <option value="NOT_INTERESTED" {% if lead.status == "NOT_INTERESTED" %}selected{% endif %}>Not Interested</option>
+        </select>
+      </form>
+    </td>
+    <td>{{ lead.assigned_to|default:"Not Assigned" }}</td>
+    <td>{{ lead.source }}</td>
+    <td>{{ lead.created_time }}</td>
+    <td>
+      <form method="post" action="{% url 'assign_lead' lead.id %}">
+        {% csrf_token %}
+        <select name="assigned_to">
+          <option value="">-- Assign --</option>
+          {% for c in counselors %}
+            <option value="{{ c.username }}">{{ c.username }} (Counselor)</option>
+          {% endfor %}
+          {% for n in nutritionists %}
+            <option value="{{ n.username }}">{{ n.username }} (Nutritionist)</option>
+          {% endfor %}
+        </select>
+        <button type="submit">Assign</button>
+      </form>
+    </td>
+    <td>
+      {% if lead.status != "CONVERTED" %}
+        <a href="{% url 'convert_lead_to_customer' lead.id %}">Convert to Customer</a>
+      {% else %}
+        Already Converted
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>

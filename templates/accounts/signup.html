@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signup</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0A3D91;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  .signup-container {
+    background-color: #E8F0FE;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: flex;
+    padding: 40px;
+    max-width: 900px;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .form-section {
+    flex: 1;
+    margin-right: 40px;
+  }
+
+  h2 {
+    margin-bottom: 10px;
+    color: #0A3D91;
+  }
+
+  .form-section p {
+    margin: 5px 0 20px 0;
+    color: #555;
+    font-size: 14px;
+  }
+
+  .form-section input,
+  .form-section select {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+
+  .form-section input:focus,
+  .form-section select:focus {
+    outline: none;
+    border-color: #0A3D91;
+  }
+
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    margin-bottom: 20px;
+    color: #555;
+  }
+
+  .checkbox-container input {
+    margin-right: 10px;
+  }
+
+  .form-section button {
+    background-color: #0A3D91;
+    color: #fff;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .form-section button:hover {
+    background-color: #07286F;
+  }
+
+  .form-section a {
+    color: #0A3D91;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .image-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+
+  .image-section img {
+    max-width: 100%;
+    border-radius: 15px;
+  }
+
+  @media (max-width: 900px) {
+    .signup-container {
+      flex-direction: column;
+      padding: 20px;
+    }
+    .form-section {
+      margin-right: 0;
+    }
+    .image-section {
+      margin-top: 20px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="signup-container">
+  <div class="form-section">
+    <h2>Sign up</h2>
+    <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="text" name="username" placeholder="Enter your name here" required>
+      <input type="password" name="password" placeholder="Enter your password here" required>
+
+      {% comment %} <label for="role">Register as:</label> {% endcomment %}
+      <select name="role" required>
+        <option value="ADMIN">Admin</option>
+        <option value="COUNSELOR">Counselor</option>
+        <option value="NUTRITIONIST">Nutritionist</option>
+      </select>
+
+    
+
+      <button type="submit">Submit</button>
+    </form>
+
+    {% for msg in messages %}
+      <p>{{ msg }}</p>
+    {% endfor %}
+  </div>
+
+  <div class="image-section">
+    <img src="/static/signup_image.png" alt="Signup Illustration">
+  </div>
+</div>
+
+</body>
+</html>
