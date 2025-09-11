@@ -78,12 +78,16 @@ WSGI_APPLICATION = 'dietclinic.wsgi.application'
 
 
 DATABASES = {
-    "default": {
-        "ENGINE": "djongo",
-        "NAME": "CRM",  # database name you want to use (create in Compass or Django will create automatically)
-        "CLIENT": {
-            "host": os.environ.get("MONGODB_URI", "mongodb://localhost:27017/"),
-        }
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': 'CRM',  # your database name
+        'CLIENT': {
+            'host': 'mongodb+srv://simranjk1468_db_user:3UOXw0Nka93Ti0tF@cluster0.jsirwn7.mongodb.net/CRM',
+            'username': 'simranjk1468_db_user',
+            'password': '3UOXw0Nka93Ti0tF',
+            'authSource': 'admin',
+            'authMechanism': 'SCRAM-SHA-1',  # or SCRAM-SHA-256 if supported
+        },
     }
 }
 
