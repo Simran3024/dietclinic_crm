@@ -274,13 +274,20 @@ def renewal_reminders():
 def plans_management(request):
     if request.session.get("role") != "ADMIN":
         return redirect("login")
+    return render(request, "users/admin_ui/plans.html")
 
-    plans = list(plans_collection.find())
-    for p in plans:
-        p["id"] = str(p["_id"])
-
-    return render(request, "users/admin_ui/plans.html", {"plans": plans})
 def whatsapp_management(request):
     if request.session.get("role") != "ADMIN":
         return redirect("login")
     return render(request, "users/admin_ui/whatsapp.html")
+
+def reports_analytics(request):
+    if request.session.get("role") != "ADMIN":
+        return redirect("login")
+    return render(request, "users/admin_ui/reports.html")
+
+def user_management(request):
+    if request.session.get("role") != "ADMIN":
+        return redirect("login")
+    return render(request, "users/admin_ui/users.html")
+
