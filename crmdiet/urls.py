@@ -30,4 +30,9 @@ urlpatterns = [
     path("reports-analytics/", views.reports_analytics, name="reports_analytics"),
     path("user-management/", views.user_management, name="user_management"),
 
+
+    path("privacy-policy/", views.privacy_policy, name="privacy_policy"),
+    path("terms/", views.terms, name="terms"),
+    path("data-deletion/", views.data_deletion, name="data_deletion"),
+
 ]

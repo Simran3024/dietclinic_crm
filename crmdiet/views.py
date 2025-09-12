@@ -291,3 +291,11 @@ def user_management(request):
         return redirect("login")
     return render(request, "users/admin_ui/users.html")
 
+def privacy_policy(request):
+    return render(request, "legal/privacy_policy.html")
+
+def terms(request):
+    return render(request, "legal/terms.html")
+
+def data_deletion(request):
+    return render(request, "legal/data_deletion.html")
