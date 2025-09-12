@@ -6,7 +6,7 @@ from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
-
+import os
 # Read MongoDB URI from environment variable (set in Render dashboard)
 MONGO_URI = os.getenv("MONGO_URI")
 
