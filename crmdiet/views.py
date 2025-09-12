@@ -7,16 +7,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
 import os
-# Read MongoDB URI from environment variable (set in Render dashboard)
-MONGO_URI = os.getenv("MONGO_URI")
-
-# Connect to Atlas
+# ---------------- MongoDB Connection ----------------
+MONGO_URI = os.getenv("MONGO_URI")  # Get from Render Environment
 client = pymongo.MongoClient(MONGO_URI)
-
-# Select CRM database
 db = client["CRM"]
 
-# Collections
 users_collection = db["users"]
 leads_collection = db["leads"]
 customers_collection = db["customers"]
