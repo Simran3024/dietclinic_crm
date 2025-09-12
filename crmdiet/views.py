@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
 import os
+import certifi
 # ---------------- MongoDB Connection ----------------
 MONGO_URI = os.getenv("MONGO_URI")  # Get from Render Environment
 client = pymongo.MongoClient(MONGO_URI)
