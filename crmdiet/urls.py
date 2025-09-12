@@ -31,8 +31,10 @@ urlpatterns = [
     path("user-management/", views.user_management, name="user_management"),
 
 
-    path("privacy-policy/", views.privacy_policy, name="privacy_policy"),
-    path("terms/", views.terms, name="terms"),
-    path("data-deletion/", views.data_deletion, name="data_deletion"),
+    path('privacy-policy/', TemplateView.as_view(template_name='privacy-policy.html')),
+    path('terms/', TemplateView.as_view(template_name='terms.html')),
+    path('data-deletion/', TemplateView.as_view(template_name='data-deletion.html')),
+
+  
 
 ]
