@@ -270,3 +270,13 @@ def renewal_reminders():
         except:
             continue
     return reminders
+
+def plans_management(request):
+    if request.session.get("role") != "ADMIN":
+        return redirect("login")
+
+    plans = list(plans_collection.find())
+    for p in plans:
+        p["id"] = str(p["_id"])
+
+    return render(request, "users/admin_ui/plans.html", {"plans": plans})
