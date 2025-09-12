@@ -30,13 +30,9 @@ urlpatterns = [
     path("reports-analytics/", views.reports_analytics, name="reports_analytics"),
     path("user-management/", views.user_management, name="user_management"),
 
-    path('privacy-policy/', TemplateView.as_view(template_name='privacy-policy.html'), name='privacy-policy'),
-    path('terms/', TemplateView.as_view(template_name='terms.html'), name='terms'),
-    path('data-deletion/', TemplateView.as_view(template_name='data-deletion.html'), name='data-deletion'),
-    
-    # path("privacy-policy/", views.privacy_policy, name="privacy_policy"),
-    # path("terms/", views.terms, name="terms"),
-    # path("data-deletion/", views.data_deletion, name="data_deletion"),
+    path('privacy-policy/', TemplateView.as_view(template_name='legal/privacy-policy.html'), name='privacy-policy'),
+    path('terms/', TemplateView.as_view(template_name='legal/terms.html'), name='terms'),
+    path('data-deletion/', TemplateView.as_view(template_name='legal/data-deletion.html'), name='data-deletion'),
 
   
 
