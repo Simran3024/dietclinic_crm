@@ -9,8 +9,14 @@ import json
 import os
 import certifi
 # ---------------- MongoDB Connection ----------------
-MONGO_URI = os.getenv("MONGO_URI")  # Get from Render Environment
-client = pymongo.MongoClient(MONGO_URI)
+MONGO_URI = os.getenv("MONGO_URI")
+
+client = pymongo.MongoClient(
+    MONGO_URI,
+    tls=True,
+    tlsCAFile=certifi.where()
+)
+
 db = client["CRM"]
 
 users_collection = db["users"]
