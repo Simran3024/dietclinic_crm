@@ -9,63 +9,86 @@ import json
 import os
 import certifi
 # ---------------- MongoDB Connection ----------------
+# ---------------- MongoDB Connection ----------------
 MONGO_URI = os.getenv("MONGO_URI")
 
-client = pymongo.MongoClient(
-    MONGO_URI,
-    tls=True,
-    tlsCAFile=certifi.where()
-)
+try:
+    client = pymongo.MongoClient(
+        MONGO_URI,
+        tls=True,
+        tlsCAFile=certifi.where()
+    )
+    db = client["CRM"]
+    users_collection = db["users"]
+    leads_collection = db["leads"]
+    customers_collection = db["customers"]
+    plans_collection = db["plans"]
+except Exception as e:
+    print("❌ MongoDB connection failed:", e)
+    traceback.print_exc()
 
-db = client["CRM"]
-
-users_collection = db["users"]
-leads_collection = db["leads"]
-customers_collection = db["customers"]
-plans_collection = db["plans"]
 
 # ---------------- SIGNUP ----------------
 def signup_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")
-        password = make_password(request.POST.get("password"))
-        role = request.POST.get("role", "").upper()
+        try:
+            username = request.POST.get("username")
+            raw_password = request.POST.get("password")
+            role = request.POST.get("role", "").upper()
 
-        if users_collection.find_one({"username": username}):
-            messages.error(request, "Username already exists.")
+            if not username or not raw_password:
+                messages.error(request, "Username and password required.")
+                return redirect("signup")
+
+            if users_collection.find_one({"username": username}):
+                messages.error(request, "Username already exists.")
+                return redirect("signup")
+
+            password = make_password(raw_password)
+
+            users_collection.insert_one({
+                "username": username,
+                "password": password,
+                "role": role
+            })
+
+            messages.success(request, "Signup successful! Please login.")
+            return redirect("login")
+
+        except Exception as e:
+            print("❌ Signup error:", e)
+            traceback.print_exc()
+            messages.error(request, f"Signup failed: {str(e)}")
             return redirect("signup")
 
-        users_collection.insert_one({
-            "username": username,
-            "password": password,
-            "role": role
-        })
-
-        messages.success(request, "Signup successful! Please login.")
-        return redirect("login")
-
     return render(request, "accounts/signup.html")
+
 
 # ---------------- LOGIN ----------------
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-        role = request.POST.get("role", "").upper()
+        try:
+            username = request.POST.get("username")
+            raw_password = request.POST.get("password")
+            role = request.POST.get("role", "").upper()
 
-        user = users_collection.find_one({"username": username, "role": role})
-        if user and check_password(password, user["password"]):
-            request.session["username"] = username
-            request.session["role"] = role
+            user = users_collection.find_one({"username": username, "role": role})
+            if user and check_password(raw_password, user["password"]):
+                request.session["username"] = username
+                request.session["role"] = role
 
-            if role == 'ADMIN':
-                return redirect('admin_dashboard')
-            elif role == 'COUNSELOR':
-                return redirect('counselor_dashboard')
-            elif role == 'NUTRITIONIST':
-                return redirect('nutritionist_dashboard')
-        else:
+                if role == 'ADMIN':
+                    return redirect('admin_dashboard')
+                elif role == 'COUNSELOR':
+                    return redirect('counselor_dashboard')
+                elif role == 'NUTRITIONIST':
+                    return redirect('nutritionist_dashboard')
+
             messages.error(request, "Invalid username, password, or role.")
+        except Exception as e:
+            print("❌ Login error:", e)
+            traceback.print_exc()
+            messages.error(request, f"Login failed: {str(e)}")
 
     return render(request, 'accounts/login.html')
 
