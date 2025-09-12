@@ -25,11 +25,9 @@ urlpatterns = [
     path("customers/", views.customers_management, name="customers_management"),
     # path("customers/update-progress/<str:customer_id>/", views.update_progress, name="update_progress"),
 
-    # Plans
-    path("plans/", views.plans_management, name="plans_management"),
+    path("plans-management/", views.plans_management, name="plans_management"),
+    path("whatsapp-management/", views.whatsapp_management, name="whatsapp_management"),
+    path("reports-analytics/", views.reports_analytics, name="reports_analytics"),
+    path("user-management/", views.user_management, name="user_management"),
 
-    # Other modules
-    path("whatsapp/", views.whatsapp_management, name="whatsapp_management"),
-    # path("reports/", views.reports_analytics, name="reports_analytics"),
-    # path("users/", views.user_management, name="user_management"),
 ]
