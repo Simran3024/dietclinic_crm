@@ -26,7 +26,7 @@ urlpatterns = [
     # path("customers/update-progress/<str:customer_id>/", views.update_progress, name="update_progress"),
 
     # Plans
-    # path("plans/", views.plans_management, name="plans_management"),
+    path("plans/", views.plans_management, name="plans_management"),
 
     # Other modules
     # path("whatsapp/", views.whatsapp_management, name="whatsapp_management"),
