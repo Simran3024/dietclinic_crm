@@ -30,6 +30,6 @@ urlpatterns = [
 
     # Other modules
     path("whatsapp/", views.whatsapp_management, name="whatsapp_management"),
-    path("reports/", views.reports_analytics, name="reports_analytics"),
-    path("users/", views.user_management, name="user_management"),
+    # path("reports/", views.reports_analytics, name="reports_analytics"),
+    # path("users/", views.user_management, name="user_management"),
 ]
