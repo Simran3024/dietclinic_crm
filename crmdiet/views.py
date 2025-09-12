@@ -280,3 +280,7 @@ def plans_management(request):
         p["id"] = str(p["_id"])
 
     return render(request, "users/admin_ui/plans.html", {"plans": plans})
+def whatsapp_management(request):
+    if request.session.get("role") != "ADMIN":
+        return redirect("login")
+    return render(request, "users/admin_ui/whatsapp.html")
