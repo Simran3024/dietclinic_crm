@@ -35,4 +35,6 @@ urlpatterns = [
     path('terms/', views.terms, name='terms'),
     path('data-deletion/', views.data_deletion, name='data-deletion'),
 
+    path("webhooks/instagram/", views.instagram_webhook, name="instagram_webhook"),
+
 ]
