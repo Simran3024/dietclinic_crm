@@ -30,7 +30,9 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [os.environ.get("RENDER_EXTERNAL_HOSTNAME", "*")]
+
 
 
 # Application definition
@@ -127,11 +129,14 @@ USE_TZ = True
  
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles" 
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Use custom user model
 AUTH_USER_MODEL = 'crmdiet.User'
+
 # INSTAGRAM_ACCESS_TOKEN = "EAAVJeTFqZC9sBPZAMtSmt4tlbVtpZAk048reDmDT47LiJK0HeUaOlmfG9ZBuaaKaBLC1IKQyJLn8DMQtZACpCd85ur2rV1niKdrwbXWmnDc7FKMNKSVv8ZCjQcJ3kOMNGR2Xo2uiFGw5LlKR345bOL6H77NeJBSTikTThAZCuqPQZC7JCAiZBHd6xORHe3wutuT26"
 # INSTAGRAM_USER_ID = "feelgreatevery.day"
