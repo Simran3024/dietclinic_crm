@@ -4,8 +4,10 @@ from django.contrib.auth.hashers import make_password, check_password
 import pymongo
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+
 import json
+
 import os
 import certifi
 import requests
