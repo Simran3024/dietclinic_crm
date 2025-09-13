@@ -323,3 +323,15 @@ def terms(request):
 
 def data_deletion(request):
     return render(request, "legals/data-deletion.html")
+
+
+def debug_leads(request):
+    # Fetch all leads
+    leads = list(leads_collection.find())
+
+    # Show count and raw data
+    context = {
+        "leads_count": len(leads),
+        "leads": leads
+    }
+    return render(request, "debug_leads.html", context)
