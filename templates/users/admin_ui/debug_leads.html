@@ -1,0 +1,30 @@
+<h1>Debug Leads</h1>
+
+<p>Total leads: {{ leads_count|default:leads|length }}</p>
+
+{% if leads %}
+<table border="1" cellpadding="5">
+  <tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Instagram</th>
+    <th>Message</th>
+    <th>Status</th>
+    <th>Source</th>
+    <th>Created Time</th>
+  </tr>
+  {% for lead in leads %}
+  <tr>
+    <td>{{ lead._id }}</td>
+    <td>{{ lead.name|default:"" }}</td>
+    <td>{{ lead.instagram_username|default:"" }}</td>
+    <td>{{ lead.message|default:"" }}</td>
+    <td>{{ lead.status|default:"" }}</td>
+    <td>{{ lead.source|default:"" }}</td>
+    <td>{{ lead.created_time|default:"" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No leads in DB yet.</p>
+{% endif %}
