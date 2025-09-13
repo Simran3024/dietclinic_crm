@@ -8,6 +8,9 @@ from django.http import JsonResponse
 import json
 import os
 import certifi
+import requests
+
+ACCESS_TOKEN = os.getenv("IG_ACCESS_TOKEN")
 # ---------------- MongoDB Connection ----------------
 # ---------------- MongoDB Connection ----------------
 MONGO_URI = os.getenv("MONGO_URI")
@@ -116,41 +119,60 @@ def nutritionist_dashboard(request):
 
 # ---------------- Webhook to Receive Instagram DMs ----------------
 @csrf_exempt
+def get_ig_username(sender_id):
+    """
+    Fetch the Instagram username for a given IG sender ID.
+    Falls back to sender_id if lookup fails.
+    """
+    try:
+        url = f"https://graph.facebook.com/v19.0/{sender_id}"
+        params = {"fields": "username", "access_token": ACCESS_TOKEN}
+        res = requests.get(url, params=params, timeout=5).json()
+        return res.get("username", sender_id)
+    except Exception as e:
+        print("⚠️ Username lookup failed:", e)
+        return sender_id
+
+
+@csrf_exempt
 def instagram_webhook(request):
-    """
-    Facebook will POST Instagram DM events here.
-    """
     if request.method == "GET":
-        # Verification challenge
+        # ✅ Webhook verification (Meta challenge)
         challenge = request.GET.get("hub.challenge")
         verify_token = request.GET.get("hub.verify_token")
-        if verify_token == "YOUR_VERIFY_TOKEN":
-            return JsonResponse({"hub.challenge": challenge})
-        return JsonResponse({"status": "Invalid verify token"}, status=400)
+        if verify_token == "YOUR_VERIFY_TOKEN":  # replace with your secret
+            return HttpResponse(challenge)  # plain text, required
+        return HttpResponse("Invalid verify token", status=403)
 
     elif request.method == "POST":
         data = json.loads(request.body)
         for entry in data.get("entry", []):
-            for msg in entry.get("messaging", []):
-                sender_id = msg["sender"]["id"]
-                message_text = msg["message"].get("text", "")
-                timestamp = datetime.fromtimestamp(msg["timestamp"] / 1000)
+            for change in entry.get("changes", []):
+                if change.get("field") == "conversations":
+                    value = change.get("value", {})
+                    for msg in value.get("messages", []):
+                        sender_id = msg["from"]["id"]
+                        message_text = msg.get("text", "")
+                        timestamp = datetime.fromtimestamp(msg["created_time"] / 1000)
 
-                username = sender_id  # Fallback if IG username not provided
-                if leads_collection.find_one({"instagram_username": username}):
-                    continue  # Skip duplicates
+                        # ✅ get real Instagram username
+                        username = get_ig_username(sender_id)
 
-                lead_doc = {
-                    "name": username,
-                    "instagram_username": username,
-                    "contact": None,
-                    "message": message_text,
-                    "status": "NEW",
-                    "assigned_to": None,
-                    "source": "Instagram DM",
-                    "created_time": timestamp.strftime("%Y-%m-%d %H:%M:%S")
-                }
-                leads_collection.insert_one(lead_doc)
+                        # Avoid duplicates
+                        if not leads_collection.find_one({
+                            "instagram_username": username,
+                            "message": message_text
+                        }):
+                            leads_collection.insert_one({
+                                "name": username,
+                                "instagram_username": username,
+                                "contact": None,
+                                "message": message_text,
+                                "status": "NEW",
+                                "assigned_to": None,
+                                "source": "Instagram DM",
+                                "created_time": timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                            })
         return JsonResponse({"status": "success"})
 
 # ---------------- Leads Management ----------------
