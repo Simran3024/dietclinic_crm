@@ -140,7 +140,7 @@ def instagram_webhook(request):
         # ✅ Webhook verification (Meta challenge)
         challenge = request.GET.get("hub.challenge")
         verify_token = request.GET.get("hub.verify_token")
-        if verify_token == "YOUR_VERIFY_TOKEN":  # replace with your secret
+        if verify_token == "insta_secret_123":  # replace with your secret
             return HttpResponse(challenge)  # plain text, required
         return HttpResponse("Invalid verify token", status=403)
 
