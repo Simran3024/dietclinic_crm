@@ -142,39 +142,58 @@ def instagram_webhook(request):
         # ✅ Webhook verification (Meta challenge)
         challenge = request.GET.get("hub.challenge")
         verify_token = request.GET.get("hub.verify_token")
+        print("DEBUG: GET request received with verify_token:", verify_token)
         if verify_token == "insta_secret_123":  # replace with your secret
+            print("DEBUG: Webhook verified successfully")
             return HttpResponse(challenge)  # plain text, required
+        print("DEBUG: Invalid verify token")
         return HttpResponse("Invalid verify token", status=403)
 
     elif request.method == "POST":
-        data = json.loads(request.body)
-        for entry in data.get("entry", []):
-            for change in entry.get("changes", []):
-                if change.get("field") == "conversations":
-                    value = change.get("value", {})
-                    for msg in value.get("messages", []):
-                        sender_id = msg["from"]["id"]
-                        message_text = msg.get("text", "")
-                        timestamp = datetime.fromtimestamp(msg["created_time"] / 1000)
+        print("DEBUG: POST request received from Instagram")
+        print("DEBUG: Raw payload:", request.body)
 
-                        # ✅ get real Instagram username
-                        username = get_ig_username(sender_id)
+        try:
+            data = json.loads(request.body)
+            print("DEBUG: Parsed JSON data:", data)
 
-                        # Avoid duplicates
-                        if not leads_collection.find_one({
-                            "instagram_username": username,
-                            "message": message_text
-                        }):
-                            leads_collection.insert_one({
-                                "name": username,
+            for entry in data.get("entry", []):
+                print("DEBUG: Processing entry:", entry)
+                for change in entry.get("changes", []):
+                    print("DEBUG: Processing change:", change)
+                    if change.get("field") == "conversations":
+                        value = change.get("value", {})
+                        for msg in value.get("messages", []):
+                            sender_id = msg["from"]["id"]
+                            message_text = msg.get("text", "")
+                            timestamp = datetime.fromtimestamp(msg["created_time"] / 1000)
+
+                            # ✅ get real Instagram username
+                            username = get_ig_username(sender_id)
+                            print(f"DEBUG: Message from {username}: {message_text}")
+
+                            # Avoid duplicates
+                            if not leads_collection.find_one({
                                 "instagram_username": username,
-                                "contact": None,
-                                "message": message_text,
-                                "status": "NEW",
-                                "assigned_to": None,
-                                "source": "Instagram DM",
-                                "created_time": timestamp.strftime("%Y-%m-%d %H:%M:%S")
-                            })
+                                "message": message_text
+                            }):
+                                leads_collection.insert_one({
+                                    "name": username,
+                                    "instagram_username": username,
+                                    "contact": None,
+                                    "message": message_text,
+                                    "status": "NEW",
+                                    "assigned_to": None,
+                                    "source": "Instagram DM",
+                                    "created_time": timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                                })
+                                print("DEBUG: Message inserted into MongoDB")
+                            else:
+                                print("DEBUG: Duplicate message skipped")
+
+        except Exception as e:
+            print("ERROR: Exception in webhook processing:", e)
+
         return JsonResponse({"status": "success"})
 
 # ---------------- Leads Management ----------------
