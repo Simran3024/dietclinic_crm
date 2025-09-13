@@ -353,4 +353,4 @@ def debug_leads(request):
         "leads_count": len(leads),
         "leads": leads
     }
-    return render(request, "debug_leads.html", context)
+    return render(request, "users/admin_ui/debug_leads.html", context)
