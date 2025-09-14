@@ -220,61 +220,46 @@ def instagram_webhook(request):
 
 @csrf_exempt
 def instagram_callback(request):
-    """
-    Handles the redirect after Instagram Business Login
-    Exchanges the 'code' for a long-lived access token
-    """
     code = request.GET.get("code")
     if not code:
-        return HttpResponse("No code provided", status=400)
+        return JsonResponse({"error": "No code returned"}, status=400)
 
     app_id = os.getenv("INSTAGRAM_APP_ID")
     app_secret = os.getenv("INSTAGRAM_APP_SECRET")
     redirect_uri = "https://dietclinic-crm.onrender.com/auth/instagram/callback/"
 
-    # Step 1: Exchange code for short-lived token
+    # Step 1: Short-lived token
     token_url = "https://api.instagram.com/oauth/access_token"
-    payload = {
+    data = {
         "client_id": app_id,
         "client_secret": app_secret,
         "grant_type": "authorization_code",
         "redirect_uri": redirect_uri,
         "code": code,
     }
-    res = requests.post(token_url, data=payload).json()
-    short_token = res.get("access_token")
+    res = requests.post(token_url, data=data)
+    short = res.json()
 
-    if not short_token:
-        return JsonResponse(res, status=400)
+    if "access_token" not in short:
+        return JsonResponse({"error": short}, status=400)
 
-    # Step 2: Exchange for long-lived token
-    exchange_url = "https://graph.instagram.com/access_token"
-    params = {
-        "grant_type": "ig_exchange_token",
-        "client_secret": app_secret,
-        "access_token": short_token,
-    }
-    long_res = requests.get(exchange_url, params=params).json()
-    long_token = long_res.get("access_token")
+    short_token = short["access_token"]
 
-    if not long_token:
-        return JsonResponse(long_res, status=400)
+    # Step 2: Long-lived token
+    exchange_url = f"https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret={app_secret}&access_token={short_token}"
+    res2 = requests.get(exchange_url)
+    long = res2.json()
 
-    # Step 3: Save the long-lived token into MongoDB (so webhook can use it)
-    mongo_uri = os.getenv("MONGO_URI")
-    mongo_db = os.getenv("MONGO_DB")
-    client = MongoClient(mongo_uri)
-    db = client[mongo_db]
-    settings_collection = db.settings
-    settings_collection.update_one(
-        {"key": "IG_ACCESS_TOKEN"},
-        {"$set": {"value": long_token}},
-        upsert=True
-    )
+    if "access_token" not in long:
+        return JsonResponse({"error": long}, status=400)
 
-    # Step 4: Return success
-    return JsonResponse({"long_lived_token": long_token, "message": "Token saved in DB"})
+    long_token = long["access_token"]
 
+    # TODO: Save long_token in MongoDB
+    return JsonResponse({
+        "short_token": short,
+        "long_lived_token": long
+    })
 # ---------------- Leads Management ----------------
 def leads_management(request):
     if request.session.get("role") != "ADMIN":
