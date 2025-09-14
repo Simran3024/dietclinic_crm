@@ -141,8 +141,9 @@ def get_ig_username(sender_id):
 
 @csrf_exempt
 def instagram_webhook(request):
+    
     VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN", "insta_secret_123")
-
+    print("Webhook hit!", request.method)
     # ---------------- Verification (GET) ----------------
     if request.method == "GET":
         mode = request.GET.get("hub.mode")
