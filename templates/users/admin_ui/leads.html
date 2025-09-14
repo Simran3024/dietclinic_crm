@@ -23,8 +23,10 @@
     <td>{{ lead.contact|default:"-" }}</td>
     <td>
       {% if lead.messages %}
-        {{ lead.messages|last.text }} <br>
-        <small>{{ lead.messages|last.created_time }}</small>
+        {% with last_msg=lead.messages|last %}
+          {{ last_msg.text|default:"-" }} <br>
+          <small>{{ last_msg.created_time|default:"-" }}</small>
+        {% endwith %}
       {% else %}
         -
       {% endif %}
