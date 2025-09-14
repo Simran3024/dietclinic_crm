@@ -135,61 +135,53 @@ def get_ig_username(sender_id):
         print("⚠️ Username lookup failed:", e)
         return sender_id
 
+VERIFY_TOKEN = "insta_secret_123"  # must match what you entered in Meta Dashboard
 
 @csrf_exempt
 def instagram_webhook(request):
     if request.method == "GET":
-        # ✅ Webhook verification (Meta challenge)
+        # ✅ Verification step (Meta challenge)
+        mode = request.GET.get("hub.mode")
+        token = request.GET.get("hub.verify_token")
         challenge = request.GET.get("hub.challenge")
-        verify_token = request.GET.get("hub.verify_token")
-        print("DEBUG: GET request received with verify_token:", verify_token)
-        if verify_token == "insta_secret_123":  # replace with your secret
-            print("DEBUG: Webhook verified successfully")
-            return HttpResponse(challenge)  # plain text, required
-        print("DEBUG: Invalid verify token")
+
+        print("DEBUG: GET verification request")
+        print("DEBUG: mode =", mode, "| token =", token, "| challenge =", challenge)
+
+        if mode == "subscribe" and token == VERIFY_TOKEN:
+            print("DEBUG: Webhook verified successfully ✅")
+            return HttpResponse(challenge, content_type="text/plain")
+
+        print("DEBUG: Invalid verify token ❌")
         return HttpResponse("Invalid verify token", status=403)
 
     elif request.method == "POST":
-        print("DEBUG: POST request received from Instagram")
-        print("DEBUG: Raw payload:", request.body)
-
+        # ✅ Incoming message from Instagram
         try:
-            data = json.loads(request.body)
-            print("DEBUG: Parsed JSON data:", data)
+            print("DEBUG: POST request received")
+            data = json.loads(request.body.decode("utf-8"))
+            print("DEBUG: Raw payload:", json.dumps(data, indent=2))
 
+            # Example structure: iterate over entries
             for entry in data.get("entry", []):
                 print("DEBUG: Processing entry:", entry)
+
                 for change in entry.get("changes", []):
                     print("DEBUG: Processing change:", change)
+
                     if change.get("field") == "conversations":
                         value = change.get("value", {})
                         for msg in value.get("messages", []):
                             sender_id = msg["from"]["id"]
                             message_text = msg.get("text", "")
-                            timestamp = datetime.fromtimestamp(msg["created_time"] / 1000)
+                            timestamp = datetime.fromtimestamp(
+                                msg["created_time"] / 1000
+                            )
 
-                            # ✅ get real Instagram username
-                            username = get_ig_username(sender_id)
-                            print(f"DEBUG: Message from {username}: {message_text}")
+                            print(f"DEBUG: Message from {sender_id}: {message_text} at {timestamp}")
 
-                            # Avoid duplicates
-                            if not leads_collection.find_one({
-                                "instagram_username": username,
-                                "message": message_text
-                            }):
-                                leads_collection.insert_one({
-                                    "name": username,
-                                    "instagram_username": username,
-                                    "contact": None,
-                                    "message": message_text,
-                                    "status": "NEW",
-                                    "assigned_to": None,
-                                    "source": "Instagram DM",
-                                    "created_time": timestamp.strftime("%Y-%m-%d %H:%M:%S")
-                                })
-                                print("DEBUG: Message inserted into MongoDB")
-                            else:
-                                print("DEBUG: Duplicate message skipped")
+                            # 👉 here you can save to DB (Mongo, SQL, etc.)
+                            # leads_collection.insert_one({...})
 
         except Exception as e:
             print("ERROR: Exception in webhook processing:", e)
