@@ -19,7 +19,7 @@ urlpatterns = [
     path("leads/convert/<str:lead_id>/", views.convert_lead_to_customer, name="convert_lead_to_customer"),
 
     # Instagram Webhook (Real-time DM Sync)
-    path("webhook/instagram/", views.instagram_webhook, name="instagram_webhook"),
+    # path("webhook/instagram/", views.instagram_webhook, name="instagram_webhook"),
 
     # Customers
     path("customers/", views.customers_management, name="customers_management"),
@@ -34,7 +34,7 @@ urlpatterns = [
     path('privacy-policy/', views.privacy_policy, name='privacy-policy'),
     path('terms/', views.terms, name='terms'),
     path('data-deletion/', views.data_deletion, name='data-deletion'),
-
+    path("instagram_webhook/", views.instagram_webhook, name="instagram_webhook"),   
     path("webhooks/instagram/", views.instagram_webhook, name="instagram_webhook"),
     path("auth/instagram/callback/", views.instagram_callback, name="instagram_callback"),
     path("debug_leads/", views.debug_leads, name="debug_leads"),
