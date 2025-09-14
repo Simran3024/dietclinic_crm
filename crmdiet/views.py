@@ -171,13 +171,19 @@ def instagram_webhook(request):
 
             for entry in data.get("entry", []):
                 for change in entry.get("changes", []):
+                            if change.get("field") == "messages":
+                                value = change.get("value", {})
+                                sender_id = value["from"]["id"]
+                                message_text = value.get("text", "")
+                                timestamp = datetime.fromtimestamp(int(value["timestamp"]) / 1000)
+
                     # Only handle conversations/messages
-                    if change.get("field") == "conversations":
-                        value = change.get("value", {})
-                        for msg in value.get("messages", []):
-                            sender_id = msg["from"]["id"]
-                            message_text = msg.get("text", "")
-                            timestamp = datetime.fromtimestamp(msg["created_time"] / 1000)
+                    # if change.get("field") == "conversations":
+                    #     value = change.get("value", {})
+                    #     for msg in value.get("messages", []):
+                    #         sender_id = msg["from"]["id"]
+                    #         message_text = msg.get("text", "")
+                    #         timestamp = datetime.fromtimestamp(msg["created_time"] / 1000)
 
                             # Fetch Instagram username
                             insta_username = get_ig_username(sender_id)
