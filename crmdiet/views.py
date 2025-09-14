@@ -136,106 +136,85 @@ def get_ig_username(sender_id):
         print("⚠️ Username lookup failed:", e)
         return sender_id
 
-VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN", "insta_secret_123")
+# VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN", "insta_secret_123")
 
 
 @csrf_exempt
-
 def instagram_webhook(request):
+    VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN", "insta_secret_123")
+
+    # ---------------- Verification (GET) ----------------
     if request.method == "GET":
         mode = request.GET.get("hub.mode")
         token = request.GET.get("hub.verify_token")
         challenge = request.GET.get("hub.challenge")
 
+        print("DEBUG: GET verification request")
+        print("DEBUG: mode =", mode, "| token =", token, "| challenge =", challenge)
+
         if mode == "subscribe" and token == VERIFY_TOKEN:
-            return HttpResponse(challenge, status=200)
+            print("DEBUG: Webhook verified successfully ✅")
+            return HttpResponse(challenge, content_type="text/plain")
+
+        print("DEBUG: Invalid verify token ❌")
         return HttpResponse("Invalid verify token", status=403)
 
+    # ---------------- Incoming Messages (POST) ----------------
     elif request.method == "POST":
         try:
+            print("DEBUG: POST request received")
             data = json.loads(request.body.decode("utf-8"))
-            print("📩 Webhook event:", json.dumps(data, indent=2))
+            print("DEBUG: Raw payload:", json.dumps(data, indent=2))
 
             for entry in data.get("entry", []):
                 for change in entry.get("changes", []):
-                    value = change.get("value", {})
-                    messages = value.get("messages", [])
-                    for msg in messages:
-                        ig_message_id = msg.get("id")
-                        sender = msg.get("from")
-                        text = msg.get("text", None)
-                        timestamp = msg.get("timestamp")
+                    # Only handle conversations/messages
+                    if change.get("field") == "conversations":
+                        value = change.get("value", {})
+                        for msg in value.get("messages", []):
+                            sender_id = msg["from"]["id"]
+                            message_text = msg.get("text", "")
+                            timestamp = datetime.fromtimestamp(msg["created_time"] / 1000)
 
-                        created_at = make_aware(datetime.fromtimestamp(int(timestamp) / 1000))
+                            # Fetch Instagram username
+                            insta_username = get_ig_username(sender_id)
 
-                        InstagramMessage.objects.get_or_create(
-                            ig_message_id=ig_message_id,
-                            defaults={
-                                "sender": sender,
-                                "text": text,
-                                "created_at": created_at,
-                            },
-                        )
+                            # ---------------- Save to MongoDB ----------------
+                            # Check if the user already exists in leads
+                            existing_lead = leads_collection.find_one({"insta_id": sender_id})
+
+                            if existing_lead:
+                                # Update the existing lead with the new message
+                                leads_collection.update_one(
+                                    {"insta_id": sender_id},
+                                    {"$push": {"messages": {
+                                        "text": message_text,
+                                        "created_time": timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                                    }}}
+                                )
+                                print(f"✅ Updated existing lead {insta_username} with new message.")
+                            else:
+                                # Create a new lead
+                                leads_collection.insert_one({
+                                    "name": insta_username,               # Display name
+                                    "instagram_username": insta_username,
+                                    "insta_id": sender_id,
+                                    "messages": [{
+                                        "text": message_text,
+                                        "created_time": timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                                    }],
+                                    "status": "NEW",
+                                    "assigned_to": None,
+                                    "source": "Instagram",
+                                    "created_time": timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                                })
+                                print(f"✅ Saved new IG lead {insta_username}: {message_text}")
 
         except Exception as e:
-            print("❌ Error parsing webhook:", e)
-            return HttpResponse("Error", status=400)
+            print("ERROR: Exception in webhook processing:", e)
 
-        return HttpResponse("EVENT_RECEIVED", status=200)
+        return JsonResponse({"status": "success"})
 
-    # 🔴 For unsupported methods
-    return HttpResponse("Method not allowed", status=405)
-
-# @csrf_exempt
-# def instagram_webhook(request):
-#     if request.method == "GET":
-#         # ✅ Verification step (Meta challenge)
-#         mode = request.GET.get("hub.mode")
-#         token = request.GET.get("hub.verify_token")
-#         challenge = request.GET.get("hub.challenge")
-
-#         print("DEBUG: GET verification request")
-#         print("DEBUG: mode =", mode, "| token =", token, "| challenge =", challenge)
-
-#         if mode == "subscribe" and token == VERIFY_TOKEN:
-#             print("DEBUG: Webhook verified successfully ✅")
-#             return HttpResponse(challenge, content_type="text/plain")
-
-#         print("DEBUG: Invalid verify token ❌")
-#         return HttpResponse("Invalid verify token", status=403)
-
-#     elif request.method == "POST":
-#         # ✅ Incoming message from Instagram
-#         try:
-#             print("DEBUG: POST request received")
-#             data = json.loads(request.body.decode("utf-8"))
-#             print("DEBUG: Raw payload:", json.dumps(data, indent=2))
-
-#             # Example structure: iterate over entries
-#             for entry in data.get("entry", []):
-#                 print("DEBUG: Processing entry:", entry)
-
-#                 for change in entry.get("changes", []):
-#                     print("DEBUG: Processing change:", change)
-
-#                     if change.get("field") == "conversations":
-#                         value = change.get("value", {})
-#                         for msg in value.get("messages", []):
-#                             sender_id = msg["from"]["id"]
-#                             message_text = msg.get("text", "")
-#                             timestamp = datetime.fromtimestamp(
-#                                 msg["created_time"] / 1000
-#                             )
-
-#                             print(f"DEBUG: Message from {sender_id}: {message_text} at {timestamp}")
-
-#                             # 👉 here you can save to DB (Mongo, SQL, etc.)
-#                             # leads_collection.insert_one({...})
-
-#         except Exception as e:
-#             print("ERROR: Exception in webhook processing:", e)
-
-#         return JsonResponse({"status": "success"})
 
 # ---------------- Leads Management ----------------
 def leads_management(request):
