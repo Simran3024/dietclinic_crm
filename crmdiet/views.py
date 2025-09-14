@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
-import pymongo
+from pymongo import MongoClient
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
@@ -216,6 +216,64 @@ def instagram_webhook(request):
 
         return JsonResponse({"status": "success"})
 
+
+
+@csrf_exempt
+def instagram_callback(request):
+    """
+    Handles the redirect after Instagram Business Login
+    Exchanges the 'code' for a long-lived access token
+    """
+    code = request.GET.get("code")
+    if not code:
+        return HttpResponse("No code provided", status=400)
+
+    app_id = os.getenv("INSTAGRAM_APP_ID")
+    app_secret = os.getenv("INSTAGRAM_APP_SECRET")
+    redirect_uri = "https://dietclinic-crm.onrender.com/auth/instagram/callback/"
+
+    # Step 1: Exchange code for short-lived token
+    token_url = "https://api.instagram.com/oauth/access_token"
+    payload = {
+        "client_id": app_id,
+        "client_secret": app_secret,
+        "grant_type": "authorization_code",
+        "redirect_uri": redirect_uri,
+        "code": code,
+    }
+    res = requests.post(token_url, data=payload).json()
+    short_token = res.get("access_token")
+
+    if not short_token:
+        return JsonResponse(res, status=400)
+
+    # Step 2: Exchange for long-lived token
+    exchange_url = "https://graph.instagram.com/access_token"
+    params = {
+        "grant_type": "ig_exchange_token",
+        "client_secret": app_secret,
+        "access_token": short_token,
+    }
+    long_res = requests.get(exchange_url, params=params).json()
+    long_token = long_res.get("access_token")
+
+    if not long_token:
+        return JsonResponse(long_res, status=400)
+
+    # Step 3: Save the long-lived token into MongoDB (so webhook can use it)
+    mongo_uri = os.getenv("MONGO_URI")
+    mongo_db = os.getenv("MONGO_DB")
+    client = MongoClient(mongo_uri)
+    db = client[mongo_db]
+    settings_collection = db.settings
+    settings_collection.update_one(
+        {"key": "IG_ACCESS_TOKEN"},
+        {"$set": {"value": long_token}},
+        upsert=True
+    )
+
+    # Step 4: Return success
+    return JsonResponse({"long_lived_token": long_token, "message": "Token saved in DB"})
 
 # ---------------- Leads Management ----------------
 def leads_management(request):

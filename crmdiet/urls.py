@@ -36,6 +36,7 @@ urlpatterns = [
     path('data-deletion/', views.data_deletion, name='data-deletion'),
 
     path("webhooks/instagram/", views.instagram_webhook, name="instagram_webhook"),
+    path("auth/instagram/callback/", views.instagram_callback, name="instagram_callback"),
     path("debug_leads/", views.debug_leads, name="debug_leads"),
 
 ]
