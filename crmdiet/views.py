@@ -3,11 +3,11 @@ from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 from pymongo import MongoClient
 from datetime import datetime
-from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
 from .models import InstagramMessage
 from django.views.decorators.csrf import csrf_exempt
 import json
+from bson.objectid import ObjectId
 from django.utils.timezone import make_aware
 import os
 import traceback
@@ -20,11 +20,12 @@ ACCESS_TOKEN = os.getenv("IG_ACCESS_TOKEN")
 MONGO_URI = os.getenv("MONGO_URI")
 
 try:
-    client = pymongo.MongoClient(
-        MONGO_URI,
-        tls=True,
-        tlsCAFile=certifi.where()
-    )
+    client = MongoClient(
+    MONGO_URI,
+    tls=True,
+    tlsCAFile=certifi.where()
+)
+
     db = client["CRM"]
     users_collection = db["users"]
     leads_collection = db["leads"]
@@ -297,7 +298,7 @@ def update_lead_status(request, lead_id):
 
     new_status = request.POST.get("status")
     leads_collection.update_one(
-        {"_id": pymongo.ObjectId(lead_id)},
+        {"_id": ObjectId(lead_id)},
         {"$set": {"status": new_status}}
     )
     messages.success(request, "Lead status updated.")
@@ -310,7 +311,7 @@ def assign_lead(request, lead_id):
 
     assigned_to = request.POST.get("assigned_to")
     leads_collection.update_one(
-        {"_id": pymongo.ObjectId(lead_id)},
+        {"_id": ObjectId(lead_id)},
         {"$set": {"assigned_to": assigned_to}}
     )
     messages.success(request, "Lead assigned successfully.")
@@ -321,7 +322,7 @@ def convert_lead_to_customer(request, lead_id):
     if request.session.get("role") != "ADMIN":
         return redirect("login")
 
-    lead = leads_collection.find_one({"_id": pymongo.ObjectId(lead_id)})
+    lead = leads_collection.find_one({"_id": ObjectId(lead_id)})
     if not lead:
         messages.error(request, "Lead not found.")
         return redirect("leads_management")
@@ -350,7 +351,7 @@ def convert_lead_to_customer(request, lead_id):
         })
 
         leads_collection.update_one(
-            {"_id": pymongo.ObjectId(lead_id)},
+            {"_id": ObjectId(lead_id)},
             {"$set": {"status": "CONVERTED"}}
         )
         messages.success(request, "Lead converted to customer successfully!")
