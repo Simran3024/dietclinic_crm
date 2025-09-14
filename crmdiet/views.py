@@ -5,9 +5,10 @@ import pymongo
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
-
+from .models import InstagramMessage
+from django.views.decorators.csrf import csrf_exempt
 import json
-
+from django.utils.timezone import make_aware
 import os
 import certifi
 import requests
@@ -135,9 +136,10 @@ def get_ig_username(sender_id):
         print("⚠️ Username lookup failed:", e)
         return sender_id
 
-VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN", "")  # must match what you entered in Meta Dashboard
+VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN", "insta_secret_123")
 
 
+@csrf_exempt
 def instagram_webhook(request):
     if request.method == "GET":
         mode = request.GET.get("hub.mode")
@@ -146,8 +148,40 @@ def instagram_webhook(request):
 
         if mode == "subscribe" and token == VERIFY_TOKEN:
             return HttpResponse(challenge, status=200)
-        else:
-            return HttpResponse("Invalid verify token", status=403)
+        return HttpResponse("Invalid verify token", status=403)
+
+    elif request.method == "POST":
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            print("Webhook event:", json.dumps(data, indent=2))  # Debugging in Render logs
+
+            for entry in data.get("entry", []):
+                for change in entry.get("changes", []):
+                    value = change.get("value", {})
+                    messages = value.get("messages", [])
+                    for msg in messages:
+                        ig_message_id = msg.get("id")
+                        sender = msg.get("from")
+                        text = msg.get("text", None)
+                        timestamp = msg.get("timestamp")
+
+                        # Convert timestamp (epoch ms) → datetime
+                        created_at = make_aware(datetime.fromtimestamp(int(timestamp) / 1000))
+
+                        # Save to DB (ignore duplicates)
+                        InstagramMessage.objects.get_or_create(
+                            ig_message_id=ig_message_id,
+                            defaults={
+                                "sender": sender,
+                                "text": text,
+                                "created_at": created_at,
+                            },
+                        )
+
+        except Exception as e:
+            print("Error parsing webhook:", e)
+
+        return HttpResponse("EVENT_RECEIVED", status=200)
 # @csrf_exempt
 # def instagram_webhook(request):
 #     if request.method == "GET":
