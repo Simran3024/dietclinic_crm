@@ -139,6 +139,7 @@ def get_ig_username(sender_id):
 VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN", "insta_secret_123")
 
 
+
 @csrf_exempt
 def instagram_webhook(request):
     if request.method == "GET":
@@ -148,40 +149,51 @@ def instagram_webhook(request):
 
         if mode == "subscribe" and token == VERIFY_TOKEN:
             return HttpResponse(challenge, status=200)
-        return HttpResponse("Invalid verify token", status=403)
+        else:
+            print(f"❌ Invalid verify token: got {token}, expected {VERIFY_TOKEN}")
+            return HttpResponse("Invalid verify token", status=403)
+# def instagram_webhook(request):
+#     if request.method == "GET":
+#         mode = request.GET.get("hub.mode")
+#         token = request.GET.get("hub.verify_token")
+#         challenge = request.GET.get("hub.challenge")
 
-    elif request.method == "POST":
-        try:
-            data = json.loads(request.body.decode("utf-8"))
-            print("Webhook event:", json.dumps(data, indent=2))  # Debugging in Render logs
+#         if mode == "subscribe" and token == VERIFY_TOKEN:
+#             return HttpResponse(challenge, status=200)
+#         return HttpResponse("Invalid verify token", status=403)
 
-            for entry in data.get("entry", []):
-                for change in entry.get("changes", []):
-                    value = change.get("value", {})
-                    messages = value.get("messages", [])
-                    for msg in messages:
-                        ig_message_id = msg.get("id")
-                        sender = msg.get("from")
-                        text = msg.get("text", None)
-                        timestamp = msg.get("timestamp")
+#     elif request.method == "POST":
+#         try:
+#             data = json.loads(request.body.decode("utf-8"))
+#             print("Webhook event:", json.dumps(data, indent=2))  # Debugging in Render logs
 
-                        # Convert timestamp (epoch ms) → datetime
-                        created_at = make_aware(datetime.fromtimestamp(int(timestamp) / 1000))
+#             for entry in data.get("entry", []):
+#                 for change in entry.get("changes", []):
+#                     value = change.get("value", {})
+#                     messages = value.get("messages", [])
+#                     for msg in messages:
+#                         ig_message_id = msg.get("id")
+#                         sender = msg.get("from")
+#                         text = msg.get("text", None)
+#                         timestamp = msg.get("timestamp")
 
-                        # Save to DB (ignore duplicates)
-                        InstagramMessage.objects.get_or_create(
-                            ig_message_id=ig_message_id,
-                            defaults={
-                                "sender": sender,
-                                "text": text,
-                                "created_at": created_at,
-                            },
-                        )
+#                         # Convert timestamp (epoch ms) → datetime
+#                         created_at = make_aware(datetime.fromtimestamp(int(timestamp) / 1000))
 
-        except Exception as e:
-            print("Error parsing webhook:", e)
+#                         # Save to DB (ignore duplicates)
+#                         InstagramMessage.objects.get_or_create(
+#                             ig_message_id=ig_message_id,
+#                             defaults={
+#                                 "sender": sender,
+#                                 "text": text,
+#                                 "created_at": created_at,
+#                             },
+#                         )
 
-        return HttpResponse("EVENT_RECEIVED", status=200)
+#         except Exception as e:
+#             print("Error parsing webhook:", e)
+
+#         return HttpResponse("EVENT_RECEIVED", status=200)
 # @csrf_exempt
 # def instagram_webhook(request):
 #     if request.method == "GET":
