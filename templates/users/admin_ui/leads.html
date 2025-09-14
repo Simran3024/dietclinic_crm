@@ -1,5 +1,4 @@
 <h2>Leads Management</h2>
-
 <hr>
 
 <!-- Leads Table -->
@@ -9,7 +8,7 @@
     <th>Name</th>
     <th>Instagram</th>
     <th>Contact</th>
-    <th>Message</th>
+    <th>Latest Message</th>
     <th>Status</th>
     <th>Assigned To</th>
     <th>Source</th>
@@ -19,10 +18,17 @@
   </tr>
   {% for lead in leads %}
   <tr>
-    <td>{{ lead.name }}</td>
-    <td>{{ lead.instagram_username }}</td>
-    <td>{{ lead.contact }}</td>
-    <td>{{ lead.message }}</td>
+    <td>{{ lead.name|default:lead.instagram_username }}</td>
+    <td>{{ lead.instagram_username|default:lead.insta_id }}</td>
+    <td>{{ lead.contact|default:"-" }}</td>
+    <td>
+      {% if lead.messages %}
+        {{ lead.messages|last.text }} <br>
+        <small>{{ lead.messages|last.created_time }}</small>
+      {% else %}
+        -
+      {% endif %}
+    </td>
     <td>
       <form method="post" action="{% url 'update_lead_status' lead.id %}">
         {% csrf_token %}
@@ -35,8 +41,8 @@
       </form>
     </td>
     <td>{{ lead.assigned_to|default:"Not Assigned" }}</td>
-    <td>{{ lead.source }}</td>
-    <td>{{ lead.created_time }}</td>
+    <td>{{ lead.source|default:"Instagram" }}</td>
+    <td>{{ lead.created_time|default:"-" }}</td>
     <td>
       <form method="post" action="{% url 'assign_lead' lead.id %}">
         {% csrf_token %}

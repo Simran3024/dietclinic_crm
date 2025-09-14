@@ -225,7 +225,17 @@ def leads_management(request):
     leads = list(leads_collection.find())
     for lead in leads:
         lead["id"] = str(lead["_id"])
-
+        if "messages" not in lead:
+            lead["messages"] = []
+        if "instagram_username" not in lead:
+            lead["instagram_username"] = lead.get("insta_id", "")
+        if "status" not in lead:
+            lead["status"] = "NEW"
+        if "created_time" in lead and isinstance(lead["created_time"], datetime):
+            lead["created_time"] = lead["created_time"].strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            lead["created_time"] = str(lead.get("created_time", ""))
+        
     counselors = list(users_collection.find({"role": "COUNSELOR"}))
     nutritionists = list(users_collection.find({"role": "NUTRITIONIST"}))
 
@@ -234,6 +244,7 @@ def leads_management(request):
         "counselors": counselors,
         "nutritionists": nutritionists
     })
+
 
 # ---------------- Update Lead Status ----------------
 def update_lead_status(request, lead_id):
